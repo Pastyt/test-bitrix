@@ -1,6 +1,7 @@
 <?php
 
 use Bitrix\Main\Application;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\DB\Connection;
 use Bitrix\Main\Loader;
 use Bitrix\Main\ModuleManager;
@@ -98,6 +99,7 @@ class currency_main extends CModule
         ModuleManager::registerModule($this->MODULE_ID);
 
         $this->installDB();
+        $this->addAgent();
 //        $this->installFiles();
 
         $APPLICATION->IncludeAdminFile(
@@ -117,6 +119,8 @@ class currency_main extends CModule
 
 //        $this->UnInstallFiles();
         $this->UnInstallDB();
+        $this->deleteAgent();
+
         ModuleManager::unRegisterModule($this->MODULE_ID);
 
         $APPLICATION->IncludeAdminFile(
@@ -171,5 +175,15 @@ class currency_main extends CModule
     {
         DeleteDirFiles($this->MODULE_PATH . '/install/admin', getenv('DOCUMENT_ROOT') . '/bitrix/admin');
         return true;
+    }
+
+    public function addAgent(): void
+    {
+        CAgent::AddAgent('\Currency\Main\AgentRunner::runDailyUpdate();', $this->MODULE_ID);
+    }
+
+    public function deleteAgent(): void
+    {
+        CAgent::RemoveModuleAgents($this->MODULE_ID);
     }
 }
