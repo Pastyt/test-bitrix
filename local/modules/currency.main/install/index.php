@@ -100,7 +100,7 @@ class currency_main extends CModule
 
         $this->installDB();
         $this->addAgent();
-//        $this->installFiles();
+        $this->installFiles();
 
         $APPLICATION->IncludeAdminFile(
             'Установка завершена',
@@ -117,7 +117,7 @@ class currency_main extends CModule
     {
         global $APPLICATION;
 
-//        $this->UnInstallFiles();
+        $this->UnInstallFiles();
         $this->UnInstallDB();
         $this->deleteAgent();
 
@@ -163,6 +163,7 @@ class currency_main extends CModule
     public function installFiles(): bool
     {
         CopyDirFiles($this->MODULE_PATH . '/install/admin', getenv('DOCUMENT_ROOT') . '/bitrix/admin', true, true);
+        CopyDirFiles($this->MODULE_PATH . '/components', getenv('DOCUMENT_ROOT') . '/local/components', true, true);
         return true;
     }
 
@@ -174,6 +175,7 @@ class currency_main extends CModule
     public function unInstallFiles(): bool
     {
         DeleteDirFiles($this->MODULE_PATH . '/install/admin', getenv('DOCUMENT_ROOT') . '/bitrix/admin');
+        DeleteDirFiles($this->MODULE_PATH . '/components', getenv('DOCUMENT_ROOT') . '/local/components');
         return true;
     }
 
