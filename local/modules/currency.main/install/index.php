@@ -2,7 +2,9 @@
 
 use Bitrix\Main\Application;
 use Bitrix\Main\DB\Connection;
+use Bitrix\Main\Loader;
 use Bitrix\Main\ModuleManager;
+use Currency\Main\Table\CurrencyTable;
 
 class currency_main extends CModule
 {
@@ -48,7 +50,6 @@ class currency_main extends CModule
 
     /**
      * @var Connection
-     * @var
      */
     public Connection $CONNECTION;
     
@@ -96,9 +97,8 @@ class currency_main extends CModule
 
         ModuleManager::registerModule($this->MODULE_ID);
 
-//        $this->installDB();
+        $this->installDB();
 //        $this->installFiles();
-//        $this->installEvents();
 
         $APPLICATION->IncludeAdminFile(
             'Установка завершена',
@@ -116,8 +116,7 @@ class currency_main extends CModule
         global $APPLICATION;
 
 //        $this->UnInstallFiles();
-//        $this->UnInstallEvents();
-//        $this->UnInstallDB();
+        $this->UnInstallDB();
         ModuleManager::unRegisterModule($this->MODULE_ID);
 
         $APPLICATION->IncludeAdminFile(
@@ -126,22 +125,30 @@ class currency_main extends CModule
         );
     }
 
-    /**
-     * Add tables to the database
-     *
-     * @return bool
-     */
-    public function installDB(): bool
+    /** Add tables to the database */
+    public function installDB(): void
     {
+        Loader::includeModule($this->MODULE_ID);
+
+        if (!$this->CONNECTION->isTableExists(
+            CurrencyTable::getEntity()->getDBTableName()
+        )) {
+            CurrencyTable::getEntity()->createDbTable();
+        }
     }
 
-    /**
-     * Remove tables from the database
-     *
-     * @return bool
-     */
-    public function unInstallDB(): bool
+    /** Remove tables from the database */
+    public function unInstallDB(): void
     {
+        Loader::includeModule($this->MODULE_ID);
+
+        if ($this->CONNECTION->isTableExists(
+            CurrencyTable::getEntity()->getDBTableName()
+        )) {
+            $this->CONNECTION->dropTable(
+                CurrencyTable::getEntity()->getDBTableName()
+            );
+        }
     }
 
     /**
