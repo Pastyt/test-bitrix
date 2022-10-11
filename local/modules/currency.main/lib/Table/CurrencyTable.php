@@ -22,7 +22,12 @@ class CurrencyTable extends Entity\DataManager
     public static function getMap(): array
     {
         return [
-            'code'   => new Entity\StringField('code', ['primary' => true,]),
+            /** bitrix just cant live without primary */
+            'id' => new Entity\IntegerField('id', [
+                'primary'      => true,
+                'autocomplete' => true,
+            ]),
+            'code'   => new Entity\StringField('code'),
             'date'   => new Entity\DatetimeField('date'),
             'course' => new Entity\FloatField('course'),
         ];
