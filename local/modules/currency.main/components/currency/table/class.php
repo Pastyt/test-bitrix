@@ -96,7 +96,7 @@ class Table extends CBitrixComponent
         $pagination = [];
 
         foreach (range(1, $pages) as $number) {
-            if ($number === $page) {
+            if ($number == $page) {
                 $pagination[] = ['page' => $number];
             } else {
                 $pagination[] = ['page' => $number, 'link' => "?page=$number$order_string"];
