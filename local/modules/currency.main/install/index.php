@@ -181,6 +181,7 @@ class currency_main extends CModule
 
     public function addAgent(): void
     {
+        /** @uses \Currency\Main\AgentRunner::runDailyUpdate() */
         CAgent::AddAgent('\Currency\Main\AgentRunner::runDailyUpdate();', $this->MODULE_ID);
     }
 
