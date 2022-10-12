@@ -173,7 +173,7 @@ class currency_main extends CModule
      */
     public function unInstallFiles(): bool
     {
-        DeleteDirFiles($this->MODULE_PATH . '/components', getenv('DOCUMENT_ROOT') . '/local/components');
+        \Bitrix\Main\IO\Directory::deleteDirectory(getenv('DOCUMENT_ROOT') . '/local/components/currency');
         return true;
     }
 
