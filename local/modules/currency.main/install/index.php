@@ -5,6 +5,7 @@ use Bitrix\Main\Config\Option;
 use Bitrix\Main\DB\Connection;
 use Bitrix\Main\Loader;
 use Bitrix\Main\ModuleManager;
+use Currency\Main\AgentRunner;
 use Currency\Main\Table\CurrencyTable;
 
 class currency_main extends CModule
@@ -95,7 +96,6 @@ class currency_main extends CModule
     {
         global $APPLICATION;
 
-
         ModuleManager::registerModule($this->MODULE_ID);
 
         $this->installDB();
@@ -162,7 +162,6 @@ class currency_main extends CModule
      */
     public function installFiles(): bool
     {
-        CopyDirFiles($this->MODULE_PATH . '/install/admin', getenv('DOCUMENT_ROOT') . '/bitrix/admin', true, true);
         CopyDirFiles($this->MODULE_PATH . '/components', getenv('DOCUMENT_ROOT') . '/local/components', true, true);
         return true;
     }
@@ -174,15 +173,16 @@ class currency_main extends CModule
      */
     public function unInstallFiles(): bool
     {
-        DeleteDirFiles($this->MODULE_PATH . '/install/admin', getenv('DOCUMENT_ROOT') . '/bitrix/admin');
         DeleteDirFiles($this->MODULE_PATH . '/components', getenv('DOCUMENT_ROOT') . '/local/components');
         return true;
     }
 
     public function addAgent(): void
     {
+        Loader::includeModule($this->MODULE_ID);
+
         /** @uses \Currency\Main\AgentRunner::runDailyUpdate() */
-        CAgent::AddAgent('\Currency\Main\AgentRunner::runDailyUpdate();', $this->MODULE_ID);
+        CAgent::AddAgent(AgentRunner::getFunction(), $this->MODULE_ID);
     }
 
     public function deleteAgent(): void

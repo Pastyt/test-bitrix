@@ -4,8 +4,16 @@ namespace Currency\Main;
 
 class AgentRunner
 {
-    public static function runDailyUpdate(): void
+    private const AGENT_FUNCTION = '\\Currency\\Main\\AgentRunner::runDailyUpdate();';
+
+    public static function runDailyUpdate(): string
     {
-        \Currency\Main\CurrencyUpdate::dailyUpdate(new \Currency\Main\CbrFetcher);
+        CurrencyUpdate::dailyUpdate(new CbrFetcher);
+        return self::AGENT_FUNCTION;
+    }
+
+    public static function getFunction(): string
+    {
+        return self::AGENT_FUNCTION;
     }
 }
