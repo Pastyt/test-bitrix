@@ -2,35 +2,30 @@
 
 use Bitrix\Main\Context;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Web\Uri;
 use Currency\Main\Table\CurrencyTable;
 
 Loader::includeModule('currency.main');
 
 class Table extends CBitrixComponent
 {
-    private function getElements(): void
+    private const SORT_FIELDS = ['code', 'date', 'course'];
+    private const ACCEPT_SORT_VAL = ['asc','desc'];
+
+    private array $activeSort = [];
+    private int $page = 1;
+    /** @var int Кол-во выводимых элементов */
+    private int $count = 10;
+
+    private function getElements(): array
     {
-        $order = [];
-
-        foreach (['code', 'date', 'course'] as $field) {
-            if (($value = $this->arParams[$field]) && in_array($value, ['asc', 'desc'])) {
-                $order[$field] = $value;
-            }
-        }
-
-        if (!$page = $this->arParams['page']) {
-            $page = 1;
-        }
-        $elements = $this->arParams['count'];
-
-        $offset = ($page - 1) * $elements;
-
         $currencies = CurrencyTable::getList(
-            ['order'       => $order,
-             'limit'       => $elements,
-             'select'      => ['code', 'date', 'course'],
-             'offset'      => $offset,
-             'count_total' => true
+            [
+                'order'       => $this->activeSort,
+                'limit'       => $this->count,
+                'select'      => ['code', 'date', 'course'],
+                'offset'      => ($this->page - 1) * $this->count,
+                'count_total' => true
             ]
         )->fetchCollection();
 
@@ -39,12 +34,12 @@ class Table extends CBitrixComponent
         foreach ($currencies as $currency) {
             $currencies_result[] = [
                 'code'   => $currency->getCode(),
-                'date'   => $currency->getDate()->toString(),
+                'date'   => $currency->getDate()->format('d.m.Y'),
                 'course' => $currency->getCourse()
             ];
         }
 
-        $this->arResult['currencies'] = $currencies_result;
+        return $currencies_result;
     }
 
     public function executeComponent()
@@ -53,56 +48,79 @@ class Table extends CBitrixComponent
          * $arParams count, code/date/course = asc/desc,
          */
         $this->checkRequest();
-        $this->getElements();
-        $this->getPagination();
+
+        $this->arResult = [
+            'currencies' => $this->getElements(),
+            'pagination' => $this->getPagination(),
+            'sort'       => $this->getSort(),
+        ];
+
 
         $this->includeComponentTemplate();
     }
 
+    /** Получение GET параметров и их установка */
     private function checkRequest(): void
     {
         $request = Context::getCurrent()->getRequest();
 
-        foreach (['code', 'date', 'course', 'page'] as $field) {
-            if ($value = $request->get($field)) {
-                $this->arParams[$field] = $value;
+        foreach (self::SORT_FIELDS as $field) {
+            if (($value = $request->get($field)) && in_array($value, self::ACCEPT_SORT_VAL, true)) {
+                $this->activeSort[$field] = $value;
             }
         }
 
-        if (!$this->arParams['count']) {
-            $this->arParams['count'] = 10;
+        if ($this->arParams['count']) {
+            $this->count = $this->arParams['count'];
+        }
+
+
+        if ((int)$request->get('page')) {
+            $this->page = (int)$request->get('page');
         }
     }
 
-    private function getPagination(): void
+    private function getPagination(): array
     {
-        $order_string = '';
-
-        foreach (['code', 'date', 'course'] as $field) {
-            if (($value = $this->arParams[$field]) && in_array($value, ['asc', 'desc'])) {
-                $order_string .= "&$field=$value";
-            }
-        }
-
-        if (!$page = $this->arParams['page']) {
-            $page = 1;
-        }
-        $elements = $this->arParams['count'];
-
         $total = CurrencyTable::getList(['count_total' => true])->getCount();
 
-        $pages = (int)ceil($total / $elements);
+        $pages = (int)ceil($total / $this->count);
 
         $pagination = [];
 
         foreach (range(1, $pages) as $number) {
-            if ($number == $page) {
+            if ($number === $this->page) {
                 $pagination[] = ['page' => $number];
             } else {
-                $pagination[] = ['page' => $number, 'link' => "?page=$number$order_string"];
+                $pagination[] = [
+                    'page' => $number,
+                    'link' => (new Uri(''))->addParams(['page' => $number,] + $this->activeSort)->getUri()
+                ];
             }
         }
 
-        $this->arResult['pagination'] = $pagination;
+        return $pagination;
     }
+
+    private function getSort(): array
+    {
+        $sort_link = [];
+
+        foreach (self::SORT_FIELDS as $field) {
+            $active_sort = $this->activeSort;
+
+            if ($active_sort[$field]) {
+                /** [asc, desc] - [asc] = [desc] */
+                $active_sort[$field] = array_values(array_diff(self::ACCEPT_SORT_VAL, [$active_sort[$field]]))[0];
+            } else {
+                $active_sort += [$field => 'asc'];
+            }
+
+            $sort_link[$field] = (new Uri(''))->addParams(['page' => $this->page] + $active_sort)->getUri();
+        }
+
+        return $sort_link;
+    }
+
+
 }

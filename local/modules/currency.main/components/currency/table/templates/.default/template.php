@@ -6,9 +6,9 @@
 
 <table>
     <tr>
-        <td>code</td>
-        <td>date</td>
-        <td>course</td>
+        <td><a href="<?=$arResult['sort']['code']?>">code</a></td>
+        <td><a href="<?=$arResult['sort']['date']?>">date</a></td>
+        <td><a href="<?=$arResult['sort']['course']?>">course</a></td>
     </tr>
     <?php
     foreach ($arResult['currencies'] as $currency): ?>
