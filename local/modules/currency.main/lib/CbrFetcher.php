@@ -2,7 +2,9 @@
 
 namespace Currency\Main;
 
+use Bitrix\Main\Type\Date;
 use Bitrix\Main\Web\HttpClient;
+use Bitrix\Main\Web\Uri;
 use CDataXML;
 use Currency\Main\Interface\Fetcher;
 
@@ -23,11 +25,16 @@ class CbrFetcher implements Fetcher
 
     private static function sendRequest(): string
     {
-        if ($result = (new HttpClient())->get(self::SOURCE_URL)) {
+        if ($result = (new HttpClient())->get(self::compileUri())) {
             return $result;
         }
 
         return '';
+    }
+
+    private static function compileUri(): string
+    {
+        return (new Uri(self::SOURCE_URL))->addParams(['date_req' => (new Date())->format('d/m/Y')])->getUri();
     }
 
     private static function xmlToArray(string $request): array
